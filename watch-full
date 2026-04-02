@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WATCh Paediatric Emergency Calculator</title>
+<style>
+body { font-family: Arial; background:#f4f6f8; margin:0; padding:20px; }
+.container { max-width:900px; margin:auto; }
+h1 { text-align:center; }
+.card { background:white; padding:15px; border-radius:10px; margin-top:15px; }
+input, button { width:100%; padding:12px; margin-top:10px; font-size:16px; }
+.section { margin-top:20px; }
+.section h3 { background:#7a007a; color:white; padding:8px; border-radius:6px; }
+.row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; }
+.warning { color:red; font-weight:bold; }
+button { background:#7a007a; color:white; border:none; border-radius:8px; }
+.small { font-size:12px; color:#555; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🧒 WATCh Full Sheet</h1>
+
+<div class="card">
+<label>Weight (kg)</label>
+<input type="number" id="weight" placeholder="Enter weight">
+<button onclick="generateSheet()">Generate Full Sheet</button>
+<div id="output"></div>
+</div>
+
+</div>
+
+<script>
+const sections = {
+
+"Emergency Drugs": {
+"Adrenaline": { dose:10, unit:"mcg", notes:"1:10,000 IV" },
+"Atropine": { dose:20, unit:"mcg", min:100, max:600 },
+"Amiodarone": { dose:5, unit:"mg", notes:"Arrest only" },
+"Lidocaine": { dose:1, unit:"mg" },
+"Naloxone": { dose:10, unit:"mcg" },
+"Tranexamic Acid": { dose:15, unit:"mg" }
+},
+
+"Bolus Drugs": {
+"Ceftriaxone": { dose:80, unit:"mg", max:2000 },
+"Levetiracetam": { dose:40, unit:"mg" },
+"Phenobarbital": { dose:20, unit:"mg" },
+"Magnesium Sulphate": { dose:0.2, unit:"ml", notes:"50% solution" }
+},
+
+"Intubation Drugs": {
+"Fentanyl": { dose:2, unit:"mcg" },
+"Ketamine": { dose:2, unit:"mg" },
+"Rocuronium": { dose:1, unit:"mg" },
+"Propofol": { dose:2.5, unit:"mg", notes:"Titrate" }
+},
+
+"Resus": {
+"Fluid Bolus": { dose:10, unit:"ml/kg" },
+"Defibrillation": { dose:4, unit:"J/kg" },
+"Glucose 10%": { dose:3, unit:"ml/kg" }
+}
+
+};
+
+function calcDose(weight, item) {
+let total = weight * item.dose;
+let warning = "";
+
+if (item.min && total < item.min) {
+total = item.min;
+warning = "Min dose";
+}
+
+if (item.max && total > item.max) {
+total = item.max;
+warning = "Max dose";
+}
+
+let unit = item.unit.includes("/kg") ? item.unit.replace("/kg","") : item.unit;
+
+return { total: total, unit: unit, warning: warning };
+}
+
+function generateSheet() {
+const weight = parseFloat(document.getElementById("weight").value);
+
+if (!weight || weight <= 0) {
+alert("Enter valid weight");
+return;
+}
+
+let html = "";
+
+for (let section in sections) {
+html += `<div class="section"><h3>${section}</h3>`;
+
+for (let drug in sections[section]) {
+let item = sections[section][drug];
+let result = calcDose(weight, item);
+
+html += `
+<div class="row">
+<div>
+<b>${drug}</b><br>
